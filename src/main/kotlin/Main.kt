@@ -6,6 +6,7 @@ import com.dumch.anth.AnthropicAgent
 import com.dumch.anth.AnthropicToolSetup
 import com.dumch.anth.toAnthropic
 import com.dumch.tool.files.ToolDeleteFile
+import com.dumch.tool.files.ToolFindTextInFiles
 import com.dumch.tool.files.ToolListFiles
 import com.dumch.tool.files.ToolModifyFile
 import com.dumch.tool.files.ToolNewFile
@@ -22,6 +23,7 @@ suspend fun main() {
         ToolNewFile.toAnthropic(),
         ToolDeleteFile.toAnthropic(),
         ToolModifyFile.toAnthropic(),
+        ToolFindTextInFiles.toAnthropic(),
     ).associateBy { it.name }
     val agent = AnthropicAgent(client, tools, userInputFlow())
     val output = agent.run()

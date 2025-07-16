@@ -2,6 +2,7 @@ package tool
 
 import com.dumch.tool.BadInputException
 import com.dumch.tool.files.ToolDeleteFile
+import com.dumch.tool.files.ToolFindTextInFiles
 import com.dumch.tool.files.ToolListFiles
 import com.dumch.tool.files.ToolModifyFile
 import com.dumch.tool.files.ToolNewFile
@@ -34,7 +35,9 @@ class ToolTest {
     @Test
     fun `test ToolNewFile, ToolModifyFile, ToolDeleteFile lifecycle`() {
         val content = "Test"
-        val path = "src/test/resources/${UUID.randomUUID()}.txt"
+        val resources = "src/test/resources"
+        val newFileName = "${UUID.randomUUID()}.txt"
+        val path = "$resources/$newFileName"
 
         // create new file
         ToolNewFile(ToolNewFile.Input(path, text = content))
@@ -44,8 +47,10 @@ class ToolTest {
         // modify new
         val newContent = "New"
         ToolModifyFile(ToolModifyFile.Input(path, oldText = content, newText = newContent))
-        val fileContentNew = ToolReadFile(ToolReadFile.Input(path))
-        assertEquals(newContent, fileContentNew)
+
+        // find
+        val findResult = ToolFindTextInFiles(ToolFindTextInFiles.Input(path = resources, newContent))
+        assertEquals("[$newFileName]", findResult)
 
         // delete
         ToolDeleteFile(ToolDeleteFile.Input(path))

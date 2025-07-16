@@ -1,0 +1,62 @@
+package com.dumch.anth
+
+import com.anthropic.core.JsonValue
+import com.anthropic.core.jsonMapper
+import com.anthropic.models.messages.Tool
+import com.anthropic.models.messages.ToolResultBlockParam
+import com.anthropic.models.messages.ToolUseBlock
+import com.dumch.tool.InputParamDescription
+import com.dumch.tool.ToolSetup
+import kotlin.reflect.KCallable
+import kotlin.reflect.full.declaredMembers
+import kotlin.reflect.full.findAnnotation
+
+interface AnthropicToolSetup {
+    val name: String
+    val description: String
+    val inputSchema: Tool.InputSchema
+
+    operator fun invoke(toolUse: ToolUseBlock): ToolResultBlockParam
+}
+
+val anthropicJsonMapper = jsonMapper()
+
+inline fun <reified Input> ToolSetup<Input>.toAnthropic(): AnthropicToolSetup {
+    val toolSetup = this
+    return object : AnthropicToolSetup {
+        override val name: String = toolSetup.name
+        override val description: String = toolSetup.description
+
+        override val inputSchema: Tool.InputSchema = HashMap<String, Any>().let { schema ->
+            val clazz = Input::class
+            for (property: KCallable<*> in clazz.declaredMembers) {
+                val annotation = property.findAnnotation<InputParamDescription>() ?: continue
+                val description = annotation.value
+                val type = property.returnType.toString().substringAfterLast(".").lowercase()
+                val desc = mapOf("type" to type, "description" to description)
+                schema.put(property.name, desc)
+            }
+            Tool.InputSchema.builder()
+                .properties(JsonValue.from(schema))
+                .build()
+        }
+
+        override fun invoke(toolUse: ToolUseBlock): ToolResultBlockParam {
+            try {
+                val input: JsonValue = toolUse._input()
+                val typed: Input = anthropicJsonMapper.convertValue(input, Input::class.java)
+                val result = toolSetup.invoke(typed)
+                return ToolResultBlockParam.builder()
+                    .content(result)
+                    .toolUseId(toolUse.id())
+                    .isError(false)
+                    .build()
+            } catch (e: Exception) {
+                return ToolResultBlockParam.Companion.builder()
+                    .content("Unpredicted exception with the tool '$name': ${e.message}")
+                    .isError(true)
+                    .build()
+            }
+        }
+    }
+}

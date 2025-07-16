@@ -52,6 +52,7 @@ inline fun <reified Input> ToolSetup<Input>.toAnthropic(): AnthropicToolSetup {
                     .isError(false)
                     .build()
             } catch (e: Exception) {
+                println(e)
                 return ToolResultBlockParam.Companion.builder()
                     .content("Unpredicted exception with the tool '$name': ${e.message}")
                     .isError(true)

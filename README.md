@@ -17,7 +17,7 @@ A Kotlin-based framework for creating and managing tools that can be used with A
 ## Prerequisites
 
 - Kotlin
-- Anthropic API key (set as an `ANTHROPIC_API_KEY` environment variable)
+- Anthropic API key (set as an `ANTHROPIC_API_KEY` environment variable) - can be obtained from [Anthropic Console](https://console.anthropic.com/account/keys)
 
 ## Setup
 

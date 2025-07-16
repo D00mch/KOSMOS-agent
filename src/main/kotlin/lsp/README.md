@@ -1,0 +1,1 @@
+TODO: support LSP-server protocol to be able to integrate with LSP clients (Neovim, VSCode)

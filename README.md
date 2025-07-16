@@ -11,6 +11,7 @@ A Kotlin-based framework for creating and managing tools that can be used with A
     - File modification
     - File creation
     - File deletion
+    - In file text search 
 - Extensible tool framework
 - Interactive command-line interface
 

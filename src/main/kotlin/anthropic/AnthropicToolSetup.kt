@@ -30,6 +30,7 @@ inline fun <reified Input> ToolSetup<Input>.toAnthropic(): AnthropicToolSetup {
         override val inputSchema: Tool.InputSchema = HashMap<String, Any>().let { schema ->
             val clazz = Input::class
             for (property: KCallable<*> in clazz.declaredMembers) {
+                // We're not afraid of reflection here — it only runs once at startup and doesn't affect runtime.
                 val annotation = property.findAnnotation<InputParamDescription>() ?: continue
                 val description = annotation.value
                 val type = property.returnType.toString().substringAfterLast(".").lowercase()
@@ -52,6 +53,7 @@ inline fun <reified Input> ToolSetup<Input>.toAnthropic(): AnthropicToolSetup {
                     .isError(false)
                     .build()
             } catch (e: Exception) {
+                // TODO: proper logging should be implemented
                 println(e)
                 return ToolResultBlockParam.Companion.builder()
                     .content("Unpredicted exception with the tool '$name': ${e.message}")

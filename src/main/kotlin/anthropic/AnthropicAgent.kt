@@ -1,6 +1,7 @@
 package com.dumch.anth
 
 import com.anthropic.client.AnthropicClient
+import com.anthropic.client.okhttp.AnthropicOkHttpClient
 import com.anthropic.models.messages.ContentBlockParam
 import com.anthropic.models.messages.Message
 import com.anthropic.models.messages.MessageCreateParams
@@ -9,6 +10,12 @@ import com.anthropic.models.messages.Model
 import com.anthropic.models.messages.Tool
 import com.anthropic.models.messages.ToolResultBlockParam
 import com.anthropic.models.messages.ToolUseBlock
+import com.dumch.tool.files.ToolDeleteFile
+import com.dumch.tool.files.ToolFindTextInFiles
+import com.dumch.tool.files.ToolListFiles
+import com.dumch.tool.files.ToolModifyFile
+import com.dumch.tool.files.ToolNewFile
+import com.dumch.tool.files.ToolReadFile
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -99,5 +106,20 @@ class AnthropicAgent(
             paramsBuilder.system("Help me fix the coding problem with kotlin project.")
         }
         return client.messages().create(paramsBuilder.build())
+    }
+
+    companion object {
+        fun instance(userInputFlow: Flow<String>): AnthropicAgent {
+            val client: AnthropicClient = AnthropicOkHttpClient.fromEnv()
+            val tools: Map<String, AnthropicToolSetup> = listOf(
+                ToolReadFile.toAnthropic(),
+                ToolListFiles.toAnthropic(),
+                ToolNewFile.toAnthropic(),
+                ToolDeleteFile.toAnthropic(),
+                ToolModifyFile.toAnthropic(),
+                ToolFindTextInFiles.toAnthropic(),
+            ).associateBy { it.name }
+            return AnthropicAgent(client, tools, userInputFlow)
+        }
     }
 }

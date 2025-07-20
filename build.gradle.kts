@@ -14,6 +14,15 @@ dependencies {
     implementation("com.anthropic:anthropic-java:1.0.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.Coroutines}")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.17.0")
+
+    // ktor
+    implementation("io.ktor:ktor-client-core:${Versions.Ktor}")
+    implementation("io.ktor:ktor-client-cio:${Versions.Ktor}")
+    implementation("io.ktor:ktor-client-content-negotiation:${Versions.Ktor}")
+    implementation("io.ktor:ktor-client-auth:${Versions.Ktor}")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:${Versions.Ktor}")
+    implementation("io.ktor:ktor-serialization-jackson:${Versions.Ktor}")
+
     testImplementation(kotlin("test"))
 }
 

@@ -10,11 +10,10 @@ object GigaResponse {
         @JsonProperty("expires_at") val expiresAt: Date
     )
 
-    data class Chat(
-        val choices: List<Choice>,
-        val created: Long,
-        val model: String,
-    )
+    sealed interface Chat {
+        data class Ok(val choices: List<Choice>, val created: Long, val model: String) : Chat
+        data class Error(val status: Int, val message: String) : Chat
+    }
 
     data class Choice(
         val message: Message,
@@ -25,11 +24,11 @@ object GigaResponse {
 
     data class Message(
         val content: String,
-        val role: String,
+        val role: GigaMessageRole,
         @JsonProperty("function_call")
         val functionCall: FunctionCall? = null,
         @JsonProperty("functions_state_id")
-        val functionsStateId: String
+        val functionsStateId: String?
     )
 
     data class FunctionCall(
@@ -47,11 +46,8 @@ object GigaRequest {
         val functions: List<Function>? = null,
     )
 
-    @Suppress("EnumEntryName")
-    enum class MessageRole { system, user, assistant, function }
-
     data class Message(
-        val role: MessageRole,
+        val role: GigaMessageRole,
         val content: String, // Could be String or FunctionCall object
         @JsonProperty("functions_state_id")
         val functionsStateId: String? = null
@@ -73,3 +69,6 @@ object GigaRequest {
         val description: String? = null
     )
 }
+
+@Suppress("EnumEntryName")
+enum class GigaMessageRole { system, user, assistant, function }

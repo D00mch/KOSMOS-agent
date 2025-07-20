@@ -1,13 +1,12 @@
 package com.dumch.giga
 
-import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.plugins.auth.Auth
-import io.ktor.client.plugins.auth.providers.BearerTokens
-import io.ktor.client.plugins.auth.providers.bearer
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.auth.*
+import io.ktor.client.plugins.auth.providers.*
+import io.ktor.client.request.*
+import io.ktor.http.*
 
 class GigaChatAPI(private val auth: GigaAuth) {
     private val client = HttpClient(CIO) {
@@ -27,10 +26,15 @@ class GigaChatAPI(private val auth: GigaAuth) {
         }
     }
 
-    suspend fun message(body: GigaRequest.Chat): GigaResponse.Chat =
-        client.post("https://gigachat.devices.sberbank.ru/api/v1/chat/completions") {
+    suspend fun message(body: GigaRequest.Chat): GigaResponse.Chat {
+        val response = client.post("https://gigachat.devices.sberbank.ru/api/v1/chat/completions") {
             setBody(body)
-        }.body()
+        }
+        return when {
+            response.status.isSuccess() -> response.body<GigaResponse.Chat.Ok>()
+            else -> response.body<GigaResponse.Chat.Error>()
+        }
+    }
 
     fun clear() = client.close()
 }

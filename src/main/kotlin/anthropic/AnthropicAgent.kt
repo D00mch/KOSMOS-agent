@@ -18,6 +18,14 @@ class AnthropicAgent(
     private val tools: Map<String, AnthropicToolSetup>,
     private val userMessages: Flow<String>,
 ) {
+    private val anthropicTools: List<ToolUnion> = tools.map { (_, toolDesc) ->
+        val tool = Tool.Companion.builder()
+            .name(toolDesc.name)
+            .description(toolDesc.description)
+            .inputSchema(toolDesc.inputSchema)
+            .build()
+        ToolUnion.ofTool(tool)
+    }
 
     fun run(): Flow<String> = channelFlow {
         // TODO: summarize conversation
@@ -75,14 +83,7 @@ class AnthropicAgent(
             .temperature(1.0)
             .messages(conversation)
 
-        for ((_, toolDesc) in tools) {
-            val tool = Tool.Companion.builder()
-                .name(toolDesc.name)
-                .description(toolDesc.description)
-                .inputSchema(toolDesc.inputSchema)
-                .build()
-            paramsBuilder.addTool(tool)
-        }
+        paramsBuilder.tools(anthropicTools)
 
         if (conversation.count() <= 1) {
             paramsBuilder.system("Help me fix the coding problem with kotlin project.")

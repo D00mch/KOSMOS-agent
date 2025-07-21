@@ -1,4 +1,4 @@
-package tool
+package tool.files
 
 import com.dumch.tool.BadInputException
 import com.dumch.tool.files.ToolDeleteFile

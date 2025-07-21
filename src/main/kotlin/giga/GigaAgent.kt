@@ -13,12 +13,12 @@ class GigaAgent(
 
     // Чтобы самим не думать об управлении ЖЦ, воспользуемся имеющимся channelFlow
     fun run(): Flow<String> = channelFlow {
-        val conversation = ArrayList<GigaRequest.Message>()
+        val conversation = ArrayList<GigaRequest.Message>() // TODO: shrink on every N steps
+
         userMessages.collect { userText ->
             conversation.add(GigaRequest.Message(GigaMessageRole.user, userText))
-            repeat(4) {
+            repeat(10) { // infinite loop protection
                 if (!isActive) return@repeat
-//                val result = gigaJsonMapper.writeValueAsString(conversation)
                 val response: GigaResponse.Chat = withContext(Dispatchers.IO) {
                     chat(conversation)
                 }
@@ -38,6 +38,7 @@ class GigaAgent(
                     val msg = ch.message
                     when {
                         msg.content.isNotBlank() && msg.functionsStateId == null -> send(msg.content)
+
                         msg.functionCall != null && msg.functionsStateId != null -> {
                             val deferred = async(Dispatchers.IO) { executeTool(msg.functionCall) }
                             toolAwaits.add(deferred)

@@ -1,16 +1,15 @@
 package com.dumch.giga
 
 import com.fasterxml.jackson.databind.DeserializationFeature
-import io.ktor.client.HttpClientConfig
-import io.ktor.client.engine.cio.CIOEngineConfig
-import io.ktor.client.plugins.HttpTimeout
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.defaultRequest
-import io.ktor.client.request.header
-import io.ktor.http.HttpHeaders
-import io.ktor.serialization.jackson.jackson
+import io.ktor.client.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.request.*
+import io.ktor.http.*
+import io.ktor.serialization.jackson.*
 import java.security.cert.X509Certificate
-import java.util.UUID
+import java.util.*
 import javax.net.ssl.X509TrustManager
 
 fun HttpClientConfig<CIOEngineConfig>.gigaDefaults() {

@@ -16,4 +16,4 @@ interface ToolSetup<Input> {
     operator fun invoke(input: Input): String
 }
 
-class BadInputException(msg: String): Exception(msg)
+class BadInputException(msg: String) : Exception(msg)

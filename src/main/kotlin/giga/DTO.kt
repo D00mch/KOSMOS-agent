@@ -1,7 +1,7 @@
 package com.dumch.giga
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import java.util.Date
+import java.util.*
 
 object GigaResponse {
 

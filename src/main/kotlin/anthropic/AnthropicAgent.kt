@@ -4,14 +4,9 @@ import com.anthropic.client.AnthropicClient
 import com.anthropic.client.okhttp.AnthropicOkHttpClient
 import com.anthropic.models.messages.*
 import com.dumch.tool.files.*
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.withContext
 
 class AnthropicAgent(
     private val client: AnthropicClient,
@@ -34,7 +29,7 @@ class AnthropicAgent(
                 .build()
             conversation.add(userMessageParam)
 
-            for(i in 1..10) { // infinite loop protection
+            for (i in 1..10) { // infinite loop protection
                 if (!isActive) break
                 val response = withContext(Dispatchers.IO) {
                     continueChat(conversation)

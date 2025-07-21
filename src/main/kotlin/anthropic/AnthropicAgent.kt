@@ -22,7 +22,6 @@ class AnthropicAgent(
         val conversation = ArrayList<MessageParam>()
         userMessages.collect { userText ->
             trySummarize(conversation)
-
             val userMessageParam = MessageParam.Companion.builder()
                 .role(MessageParam.Role.USER)
                 .content(userText)
@@ -59,19 +58,25 @@ class AnthropicAgent(
         }
     }
 
-    private fun trySummarize(conversation: ArrayList<MessageParam>) {
-        if (conversation.size < 20) return
-        val summary = client.messages().create(
-            MessageCreateParams.builder()
-                .model(model)
-                .maxTokens(256)
-                .temperature(0.7)
-                .messages(conversation)
-                .system("Summarize this conversation")
-                .build()
-        )
+    private suspend fun trySummarize(conversation: ArrayList<MessageParam>) {
+        if (conversation.size < 15) return
+
+        val summary = withContext(Dispatchers.IO) {
+            client.messages().create(
+                MessageCreateParams.builder()
+                    .model(model)
+                    .maxTokens(512)
+                    .temperature(0.7)
+                    .messages(conversation)
+                    .system("Summarize the conversation so far")
+                    .build()
+            )
+        }
+
+        val lastMessage = conversation.last()
         conversation.clear()
         conversation.add(summary.toParam())
+        conversation.add(lastMessage)
     }
 
     private fun executeTool(toolBlock: ToolUseBlock): ToolResultBlockParam {
@@ -91,10 +96,6 @@ class AnthropicAgent(
             .messages(conversation)
 
         paramsBuilder.tools(anthropicTools)
-
-        if (conversation.count() <= 1) {
-            paramsBuilder.system("Help me fix the coding problem with kotlin project.")
-        }
         return client.messages().create(paramsBuilder.build())
     }
 

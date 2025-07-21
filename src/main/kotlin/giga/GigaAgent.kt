@@ -17,6 +17,7 @@ class GigaAgent(
         val conversation = ArrayList<GigaRequest.Message>() // TODO: shrink on every N steps
 
         userMessages.collect { userText ->
+            trySummarize(conversation)
             conversation.add(GigaRequest.Message(GigaMessageRole.user, userText))
             for (i in 1..10) { // infinite loop protection
                 if (!isActive) break
@@ -49,6 +50,20 @@ class GigaAgent(
                 if (toolAwaits.isEmpty()) break
                 conversation.addAll(toolAwaits.awaitAll())
             }
+        }
+    }
+
+    private suspend fun trySummarize(conversation: ArrayList<GigaRequest.Message>): GigaRequest.Message {
+        val response: GigaResponse.Chat = withContext(Dispatchers.IO) {
+            conversation.add(GigaRequest.Message(
+                role = GigaMessageRole.system,
+                content = "Summarize the conversation so far",
+            ))
+            chat(conversation)
+        }
+        return when(response) {
+            is GigaResponse.Chat.Error -> throw CancellationException("Can't summarize the conversation")
+            is GigaResponse.Chat.Ok -> response.toRequestMessages().last()
         }
     }
 

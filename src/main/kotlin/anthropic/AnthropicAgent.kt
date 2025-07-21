@@ -18,13 +18,8 @@ class AnthropicAgent(
     private val tools: Map<String, AnthropicToolSetup>,
     private val userMessages: Flow<String>,
 ) {
-    private val anthropicTools: List<ToolUnion> = tools.map { (_, toolDesc) ->
-        val tool = Tool.Companion.builder()
-            .name(toolDesc.name)
-            .description(toolDesc.description)
-            .inputSchema(toolDesc.inputSchema)
-            .build()
-        ToolUnion.ofTool(tool)
+    private val anthropicTools: List<ToolUnion> = tools.map { (_, tool) ->
+        ToolUnion.ofTool(tool.tool)
     }
 
     fun run(): Flow<String> = channelFlow {
@@ -101,7 +96,7 @@ class AnthropicAgent(
                 ToolDeleteFile.toAnthropic(),
                 ToolModifyFile.toAnthropic(),
                 ToolFindTextInFiles.toAnthropic(),
-            ).associateBy { it.name }
+            ).associateBy { it.tool.name() }
             return AnthropicAgent(client, tools, userInputFlow)
         }
     }

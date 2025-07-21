@@ -1,5 +1,11 @@
 package com.dumch.giga
 
+import com.dumch.tool.files.ToolDeleteFile
+import com.dumch.tool.files.ToolFindTextInFiles
+import com.dumch.tool.files.ToolListFiles
+import com.dumch.tool.files.ToolModifyFile
+import com.dumch.tool.files.ToolNewFile
+import com.dumch.tool.files.ToolReadFile
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
@@ -84,5 +90,20 @@ class GigaAgent(
             functions = functions,
         )
         return api.message(body)
+    }
+
+    companion object {
+        private val tools: Map<String, GigaToolSetup> = listOf(
+            ToolReadFile.toGiga(),
+            ToolListFiles.toGiga(),
+            ToolNewFile.toGiga(),
+            ToolDeleteFile.toGiga(),
+            ToolModifyFile.toGiga(),
+            ToolFindTextInFiles.toGiga(),
+        ).associateBy { it.fn.name }
+
+        fun instance(userMessages: Flow<String>, api: GigaChatAPI): GigaAgent {
+            return GigaAgent(userMessages, api, tools)
+        }
     }
 }

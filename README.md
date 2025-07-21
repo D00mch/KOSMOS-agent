@@ -1,10 +1,12 @@
-# Anthropic Agent Tool Framework
+# AI Agent Tool Framework
 
-A Kotlin-based framework for creating and managing tools that can be used with Anthropic's Claude AI model. This project provides a structured way to implement tool-based interactions with Claude, allowing for file operations and other system interactions.
+A Kotlin-based framework for creating and managing tools that can be used with various AI models including Anthropic's Claude and GigaChat. This project provides a structured way to implement tool-based interactions with AI models, allowing for file operations and other system interactions.
 
 ## Features
 
-- Tool-based interaction system with Anthropic's Claude AI
+- Tool-based interaction system supporting multiple AI providers:
+    - Anthropic's Claude AI
+    - GigaChat API
 - Built-in file operation tools:
     - File reading
     - File listing
@@ -18,7 +20,10 @@ A Kotlin-based framework for creating and managing tools that can be used with A
 ## Prerequisites
 
 - Kotlin
-- Anthropic API key (set as an `ANTHROPIC_API_KEY` environment variable) - can be obtained from [Anthropic Console](https://console.anthropic.com/account/keys)
+- For Anthropic Claude:
+    - Anthropic API key (set as an `ANTHROPIC_API_KEY` environment variable) - can be obtained from [Anthropic Console](https://console.anthropic.com/account/keys)
+- For GigaChat:
+    - GigaChat credentials (Authorization token required), [API page](https://developers.sber.ru/portal/products/gigachat-api).
 
 ## Setup
 
@@ -33,6 +38,13 @@ A Kotlin-based framework for creating and managing tools that can be used with A
 
 - `src/main/kotlin/`
     - `anthropic/` - Anthropic agent implementation
+    - `giga/` - GigaChat integration
+        - `GigaAgent.kt` - GigaChat agent implementation
+        - `GigaChatAPI.kt` - API client implementation
+        - `GigaAuth.kt` - Authentication handling
+        - `GigaToolSetup.kt` - Tool setup for GigaChat
+        - `DTO.kt` - Data transfer objects
+        - `GigaKtorClientDefaults.kt` - HTTP client configuration
     - `tool/` - Tool framework and implementations
         - `files/` - File operation tools
     - `Main.kt` - Application entry point

@@ -11,7 +11,6 @@ import kotlin.reflect.full.findAnnotation
 
 interface GigaToolSetup {
     val fn: GigaRequest.Function
-
     operator fun invoke(functionCall: GigaResponse.FunctionCall): GigaRequest.Message
 }
 

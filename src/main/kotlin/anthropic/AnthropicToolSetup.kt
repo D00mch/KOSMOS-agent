@@ -12,10 +12,7 @@ import kotlin.reflect.full.declaredMembers
 import kotlin.reflect.full.findAnnotation
 
 interface AnthropicToolSetup {
-    val name: String
-    val description: String
-    val inputSchema: Tool.InputSchema
-
+    val tool: Tool
     operator fun invoke(toolUse: ToolUseBlock): ToolResultBlockParam
 }
 
@@ -23,24 +20,27 @@ val anthropicJsonMapper = jsonMapper()
 
 inline fun <reified Input> ToolSetup<Input>.toAnthropic(): AnthropicToolSetup {
     val toolSetup = this
-    return object : AnthropicToolSetup {
-        override val name: String = toolSetup.name
-        override val description: String = toolSetup.description
-
-        override val inputSchema: Tool.InputSchema = HashMap<String, Any>().let { schema ->
-            val clazz = Input::class
-            for (property: KCallable<*> in clazz.declaredMembers) {
-                // We're not afraid of reflection here — it only runs once at startup and doesn't affect runtime.
-                val annotation = property.findAnnotation<InputParamDescription>() ?: continue
-                val description = annotation.value
-                val type = property.returnType.toString().substringAfterLast(".").lowercase()
-                val desc = mapOf("type" to type, "description" to description)
-                schema.put(property.name, desc)
-            }
-            Tool.InputSchema.builder()
-                .properties(JsonValue.from(schema))
-                .build()
+    val inputSchema: Tool.InputSchema = HashMap<String, Any>().let { schema ->
+        val clazz = Input::class
+        for (property: KCallable<*> in clazz.declaredMembers) {
+            // We're not afraid of reflection here — it only runs once at startup and doesn't affect runtime.
+            val annotation = property.findAnnotation<InputParamDescription>() ?: continue
+            val description = annotation.value
+            val type = property.returnType.toString().substringAfterLast(".").lowercase()
+            val desc = mapOf("type" to type, "description" to description)
+            schema.put(property.name, desc)
         }
+        Tool.InputSchema.builder()
+            .properties(JsonValue.from(schema))
+            .build()
+    }
+
+    return object : AnthropicToolSetup {
+        override val tool: Tool = Tool.Companion.builder()
+            .name(toolSetup.name)
+            .description(toolSetup.description)
+            .inputSchema(inputSchema)
+            .build()
 
         override fun invoke(toolUse: ToolUseBlock): ToolResultBlockParam {
             try {

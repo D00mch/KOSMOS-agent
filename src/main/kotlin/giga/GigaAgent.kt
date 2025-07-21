@@ -23,8 +23,8 @@ class GigaAgent(
 
         userMessages.collect { userText ->
             conversation.add(GigaRequest.Message(GigaMessageRole.user, userText))
-            repeat(10) { // infinite loop protection
-                if (!isActive) return@repeat
+            for (i in 1..10) { // infinite loop protection
+                if (!isActive) break
                 val response: GigaResponse.Chat = withContext(Dispatchers.IO) {
                     chat(conversation)
                 }
@@ -51,7 +51,7 @@ class GigaAgent(
                         }
                     }
                 }
-                if (toolAwaits.isEmpty()) return@repeat
+                if (toolAwaits.isEmpty()) break
                 conversation.addAll(toolAwaits.awaitAll())
             }
         }

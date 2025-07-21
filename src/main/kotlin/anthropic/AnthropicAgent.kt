@@ -16,6 +16,7 @@ import kotlinx.coroutines.withContext
 class AnthropicAgent(
     private val client: AnthropicClient,
     private val tools: Map<String, AnthropicToolSetup>,
+    private val model: Model = Model.CLAUDE_3_5_SONNET_20241022,
     private val userMessages: Flow<String>,
 ) {
     private val anthropicTools: List<ToolUnion> = tools.map { (_, tool) ->
@@ -32,8 +33,8 @@ class AnthropicAgent(
                 .build()
             conversation.add(userMessageParam)
 
-            repeat(times = 20) { // infinite loop protection
-                if (!isActive) return@repeat
+            for(i in 1..10) { // infinite loop protection
+                if (!isActive) break
                 val response = withContext(Dispatchers.IO) {
                     continueChat(conversation)
                 }
@@ -50,7 +51,7 @@ class AnthropicAgent(
                         content.isText() -> send(content.asText().text())
                     }
                 }
-                if (toolAwaits.isEmpty()) return@repeat
+                if (toolAwaits.isEmpty()) break
                 val toolResults = toolAwaits.awaitAll()
                 val toolContentBlockParams = toolResults.map(ContentBlockParam.Companion::ofToolResult)
                 val toolUseResultMessageParam = MessageParam.Companion.builder()
@@ -73,7 +74,7 @@ class AnthropicAgent(
 
     private fun continueChat(conversation: List<MessageParam>): Message {
         val paramsBuilder = MessageCreateParams.Companion.builder()
-            .model(Model.Companion.CLAUDE_3_5_SONNET_20241022)
+            .model(model)
             .maxTokens(1024)
             .temperature(1.0)
             .messages(conversation)
@@ -87,7 +88,10 @@ class AnthropicAgent(
     }
 
     companion object {
-        fun instance(userInputFlow: Flow<String>): AnthropicAgent {
+        fun instance(
+            userInputFlow: Flow<String>,
+            model: Model = Model.CLAUDE_3_5_SONNET_20241022,
+        ): AnthropicAgent {
             val client: AnthropicClient = AnthropicOkHttpClient.fromEnv()
             val tools: Map<String, AnthropicToolSetup> = listOf(
                 ToolReadFile.toAnthropic(),
@@ -97,7 +101,7 @@ class AnthropicAgent(
                 ToolModifyFile.toAnthropic(),
                 ToolFindTextInFiles.toAnthropic(),
             ).associateBy { it.tool.name() }
-            return AnthropicAgent(client, tools, userInputFlow)
+            return AnthropicAgent(client, tools, model, userInputFlow)
         }
     }
 }

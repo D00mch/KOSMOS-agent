@@ -24,9 +24,10 @@ class AnthropicAgent(
     }
 
     fun run(): Flow<String> = channelFlow {
-        // TODO: summarize conversation
         val conversation = ArrayList<MessageParam>()
         userMessages.collect { userText ->
+            trySummarize(conversation)
+
             val userMessageParam = MessageParam.Companion.builder()
                 .role(MessageParam.Role.USER)
                 .content(userText)
@@ -61,6 +62,21 @@ class AnthropicAgent(
                 conversation.add(toolUseResultMessageParam)
             }
         }
+    }
+
+    private fun trySummarize(conversation: ArrayList<MessageParam>) {
+        if (conversation.size < 20) return
+        val summary = client.messages().create(
+            MessageCreateParams.builder()
+                .model(model)
+                .maxTokens(256)
+                .temperature(0.7)
+                .messages(conversation)
+                .system("Summarize this conversation")
+                .build()
+        )
+        conversation.clear()
+        conversation.add(summary.toParam())
     }
 
     private fun executeTool(toolBlock: ToolUseBlock): ToolResultBlockParam {

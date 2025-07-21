@@ -14,6 +14,7 @@ A Kotlin-based framework for creating and managing tools that can be used with v
     - File creation
     - File deletion
     - In file text search 
+    - Bash command execution
 - Extensible tool framework
 - Interactive command-line interface
 

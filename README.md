@@ -50,6 +50,35 @@ A Kotlin-based framework for creating and managing tools that can be used with v
         - `files/` - File operation tools
     - `Main.kt` - Application entry point
 
+## Agent simple algorithm scheme
+
+```bash
+┌─────────────────────────────── Loop 1-5 ───────────────────┐
+│ User          Agent                                   LLM  │
+│  |              |                                      |   │
+│  |1. msg input  |                                      |   │
+│  └─────────────▶|2. add msg into msgs                  |   │
+│  |              |                                      |   │
+│  |              | ┌──────────── Loop 3-5 ──────────────┐   │
+│  |              | │                                    |   │
+│  |              | │3. send(msgs, tools) ──────────────▶|   │
+│  |              | │                                    |   │
+│  |              | │4-1. plain text  ◀──────────────────|   │
+│  |              | │      └─► print text                |   │
+│  |              | │                                    |   │
+│  |              | │4-2. function call ◀──────────────  |   │
+│  |              | │               │                    |   │
+│  |              | │               │ exec tool          |   │
+│  |              | │               │ add result→msgs    |   │
+│  |              | │               │                    |   │
+│  |              | │◀───────────5. fn call? ───────────────▶│
+│  |              | └────────────────────────────────────┘   │
+│  |              |                                      |   │
+│  |◀─────────────|                                      |   │
+│  | 6. go to 1   |                                      |   │
+└──┴──────────────┴──────────────────────────────────────┴───┘
+```
+
 ## Usage
 
 Run the application:

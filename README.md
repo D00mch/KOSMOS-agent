@@ -102,7 +102,7 @@ interface ToolSetup<Input> {
 ```
 
 2. Define the input parameters using a data class with `@InputParamDescription` annotations
-3. Add the tool to the tools list in `Main.kt`
+3. Add the tool to the tools list in a specific Agent implementation.
 
 ## Dependencies
 

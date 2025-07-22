@@ -856,6 +856,8 @@ class GigaChatAPI(private val auth: GigaAuth) {
 ```kotlin
 suspend fun main() {
     val chat = GigaChatAPI(GigaAuth)
+
+    // временный код для демонстрации
     val response = chat.message(
         GigaRequest.Chat(
             messages = listOf(
@@ -1054,7 +1056,7 @@ fun Exception.toGigaToolMessage(): GigaRequest.Message {
 
 Нам осталось реализовать Агента. Так будет выглядеть первый упрощенный алгоритм:
 
-```
+```bash
 ┌─────────────────────────────── Loop 1-5 ───────────────────┐
 │ User          Agent                                   LLM  │
 │  |              |                                      |   │
@@ -1479,7 +1481,7 @@ object ToolRunBashCommand : ToolSetup<ToolRunBashCommand.Input> {
 }
 ```
 
-Обратите внимания, Антропик написал такую реализацию, которая позволит ему украсть наши ключи. Лучше ограничить список команд, которые он может выполнять. Для начала можно обойтись одной: `./gradlew`.
+Антропик написал такую реализацию, которая позволит ему украсть наши ключи. Лучше ограничить список команд, которые он может выполнять. Для начала можно обойтись одной: `./gradlew`.
 
 Тест ниже тоже написан антропиком:
 ```kotlin

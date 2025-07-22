@@ -14,9 +14,7 @@ object ToolDeleteFile : ToolSetup<ToolDeleteFile.Input> {
         if (!file.exists() || file.isDirectory) {
             throw BadInputException("Invalid file path: ${input.path}")
         }
-        if (!FilesToolUtil.isPathSafe(file)) {
-            throw BadInputException("Access denied: File path must be within project directory")
-        }
+        FilesToolUtil.requirePathIsSave(file)
         file.delete()
         return "File deleted at ${input.path}"
     }

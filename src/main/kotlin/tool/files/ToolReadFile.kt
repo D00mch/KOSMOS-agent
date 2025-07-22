@@ -16,6 +16,7 @@ object ToolReadFile : ToolSetup<ToolReadFile.Input> {
         if (!file.exists() || file.isDirectory) {
             throw BadInputException("Invalid file path: $path")
         }
+        FilesToolUtil.requirePathIsSave(file)
         return file.readText()
     }
 

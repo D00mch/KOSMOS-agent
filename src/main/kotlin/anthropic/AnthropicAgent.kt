@@ -59,7 +59,10 @@ class AnthropicAgent(
     }
 
     private suspend fun trySummarize(conversation: ArrayList<MessageParam>) {
-        if (conversation.size < 15) return
+        if (conversation.size <= 2) return
+        val msg = MessageCountTokensParams.builder().model(model).messages(conversation).build()
+        val inputTokens: Long = client.messages().countTokens(msg).inputTokens()
+        if (inputTokens < MAX_TOKENS * THRESHOLD_PCT) return
 
         val summary = withContext(Dispatchers.IO) {
             client.messages().create(
@@ -100,6 +103,9 @@ class AnthropicAgent(
     }
 
     companion object {
+        private const val MAX_TOKENS = 8192 // TODO: get value based on the model
+        private const val THRESHOLD_PCT = 0.9 // Start summarization on 90% fill up
+
         fun instance(
             userInputFlow: Flow<String>,
             model: Model = Model.CLAUDE_3_5_SONNET_20241022,

@@ -53,7 +53,8 @@ class GigaAgent(
         }
     }
 
-    private suspend fun trySummarize(conversation: ArrayList<GigaRequest.Message>): GigaRequest.Message {
+    private suspend fun trySummarize(conversation: ArrayList<GigaRequest.Message>) {
+        if (conversation.size > 20) return // TODO: decide based on model's max tokens
         val response: GigaResponse.Chat = withContext(Dispatchers.IO) {
             conversation.add(GigaRequest.Message(
                 role = GigaMessageRole.system,
@@ -61,10 +62,14 @@ class GigaAgent(
             ))
             chat(conversation)
         }
-        return when(response) {
+        val msg: GigaRequest.Message = when(response) {
             is GigaResponse.Chat.Error -> throw CancellationException("Can't summarize the conversation")
             is GigaResponse.Chat.Ok -> response.toRequestMessages().last()
         }
+        val lastMsg = conversation.last()
+        conversation.clear()
+        conversation.add(msg)
+        conversation.add(lastMsg)
     }
 
     private fun GigaResponse.Chat.Ok.toRequestMessages(): Collection<GigaRequest.Message> {

@@ -1408,7 +1408,9 @@ class ToolRunBashCommandTest {
 ```kotlin
 // ... inside AnthropicAgent
 private suspend fun trySummarize(conversation: ArrayList<MessageParam>) {
-    if (conversation.size < 15) return
+    val msg = MessageCountTokensParams.builder().model(model).messages(conversation).build()
+    val inputTokens: Long = client.messages().countTokens(msg).inputTokens()
+    if (inputTokens < MAX_TOKENS * THRESHOLD_PCT) return
 
     val summary = withContext(Dispatchers.IO) {
         client.messages().create(

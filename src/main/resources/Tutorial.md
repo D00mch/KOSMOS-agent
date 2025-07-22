@@ -264,7 +264,7 @@ curl -L 'https://gigachat.devices.sberbank.ru/api/v1/chat/completions' \
 
 # Написание агента
 
-Нам понадобится окружение, где мы сможем запустить Kotlin код. Можно создать новый Kotlin-проект в Intellij IDEA, а можно взять скелет из [моего репозитория ko-agent](https://github.com/D00mch/ko-agent/tree/skeleton).
+Понадобится окружение, где мы сможем запустить Kotlin код. Можно создать новый Kotlin-проект в Intellij IDEA или взять скелет из [моего репозитория ko-agent](https://github.com/D00mch/ko-agent/tree/skeleton).
 
 ```bash
 tree -I '.*|.git' --prune
@@ -273,6 +273,7 @@ tree -I '.*|.git' --prune
 ├── gradle.properties
 ├── gradlew
 ├── settings.gradle.kts
+├── build.gradle.kts
 └── src
     ├── main
     │   └── kotlin
@@ -291,7 +292,7 @@ tree -I '.*|.git' --prune
             └── test.txt
 ```
 
-Из зависимостей не забудьте добавить корутины:
+Из зависимостей не забудьте добавить корутины в build.gradle:
 
 ```kotlin
 dependencies {
@@ -322,6 +323,8 @@ interface ToolSetup<Input> {
 - Создание файла (`>>`)
 - Удаление файла (`rm`)
 - Поиск текста в файле (`find`)
+
+Просто дать терминал мы не хотим, потому что сложнее будет обеспечить безопасность.
 
 ## Пишем первую функцию — ListFiles
 
@@ -1305,7 +1308,7 @@ inline fun <reified Input> ToolSetup<Input>.toAnthropic(): AnthropicToolSetup {
 }
 ```
 
-Агент 1 в 1, как GigaAgent:
+Агент 1 в 1, как GigaAgent. Если хотите, можете вынести общую часть в абстракцию. Я этого делать не стал, чтобы не усложнять статью.
 
 ```kotlin
 import com.anthropic.client.AnthropicClient
@@ -1521,5 +1524,7 @@ private suspend fun trySummarize(conversation: ArrayList<MessageParam>) {
 Можно написать обертку над [GitHub API](https://docs.github.com/en/rest/orgs?apiVersion=2022-11-28), чтобы Агент мог смотреть код открытых проектов. Или пойти в сторону Web Scraping, что будет посложнее.
 
 Инфраструктурно явно не хватает логов для понимая, что происходит.
+
+Если захочется встроить агента в редактор кода, хороший вариант — реализовать [LSP-сервер](https://microsoft.github.io/language-server-protocol/).
 
 Как видите, написать агента несложно, сложно оплачивать счета за Anthropic.

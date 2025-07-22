@@ -1230,7 +1230,7 @@ class GigaAgent(
 export ANTHROPIC_API_KEY=sk-ant-api....
 ```
 
-В проект нужно подключить SDK, добавив:
+К проекту SDK подключается добавлением одной зависимости:
 ```kotlin
 dependencies {
     // ...
@@ -1240,7 +1240,7 @@ dependencies {
 
 ## Адаптер над функциями
 
-В Anthropic будет всё то же самое, что с Гигачатом, только будем использовать объекты их SDK вместо написанных нами DTO:
+С Anthropic всё то же самое, что и с Гигачатом, только будем использовать объекты их SDK вместо написанных нами DTO:
 
 ```kotlin
 import com.anthropic.core.JsonValue
@@ -1266,7 +1266,6 @@ inline fun <reified Input> ToolSetup<Input>.toAnthropic(): AnthropicToolSetup {
     val inputSchema: Tool.InputSchema = HashMap<String, Any>().let { schema ->
         val clazz = Input::class
         for (property: KCallable<*> in clazz.declaredMembers) {
-            // We're not afraid of reflection here — it only runs once at startup and doesn't affect runtime.
             val annotation = property.findAnnotation<InputParamDescription>() ?: continue
             val description = annotation.value
             val type = property.returnType.toString().substringAfterLast(".").lowercase()
@@ -1473,7 +1472,9 @@ object ToolRunBashCommand : ToolSetup<ToolRunBashCommand.Input> {
 }
 ```
 
-Попросил добавить тест — и тест был написан:
+Обратите внимания, Антрофик написал такую реализацию, которая позволит ему украсть наши ключи. Лучше ограничить список команд, которые он может выполнять. Для начала можно обойтись одной: `./gradlew`.
+
+Тест ниже тоже написан антрофиком:
 ```kotlin
 class ToolRunBashCommandTest {
     @Test
@@ -1488,20 +1489,19 @@ class ToolRunBashCommandTest {
 }
 ```
 
-Не забудьте реализовать суммаризацию диалога с чатом, чтобы и токены экономить и помещаться в контекстное окно. Пример, как можно решить:
+Не забудьте реализовать суммаризацию диалога с чатом, чтобы и токены сэкономить и помещаться в контекстное окно. Пример, как можно решить:
 
 ```kotlin
 // ... inside AnthropicAgent
 private suspend fun trySummarize(conversation: ArrayList<MessageParam>) {
     val msg = MessageCountTokensParams.builder().model(model).messages(conversation).build()
     val inputTokens: Long = client.messages().countTokens(msg).inputTokens()
-    if (inputTokens < MAX_TOKENS * THRESHOLD_PCT) return
+    if (inputTokens < MAX_TOKENS * THRESHOLD_PCT /* 8096 */) return
 
     val summary = withContext(Dispatchers.IO) {
         client.messages().create(
             MessageCreateParams.builder()
                 .model(model)
-                .maxTokens(512)
                 .temperature(0.7)
                 .messages(conversation)
                 .system("Summarize the conversation so far")

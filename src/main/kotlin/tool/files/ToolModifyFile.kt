@@ -13,9 +13,10 @@ object ToolModifyFile : ToolSetup<ToolModifyFile.Input> {
         val file = File(input.path)
         if (input.oldText == input.newText || input.path.isBlank() || input.oldText.isEmpty()) {
             throw BadInputException("Invalid input parameters")
-        }
-        if (!file.exists()) {
+        } else if (!file.exists()) {
             throw BadInputException("File does not exist")
+        } else if (!FilesToolUtil.isPathSafe(file)) {
+            throw BadInputException("Access denied: File path must be within project directory")
         }
         val content = file.readText()
         val newContent = content.replace(input.oldText, input.newText)

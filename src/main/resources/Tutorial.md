@@ -532,6 +532,21 @@ object ToolDeleteFile : ToolSetup<ToolDeleteFile.Input> {
 
 Тест должны проходить. Если возникнут проблемы, можете посмотреть на проект [ko-agent](https://github.com/D00mch/ko-agent) и взять код оттуда.
 
+## Подумаем о безопасности
+
+Подустали? Давайте просыпаться. Ниже написан тест, который не стоит(!) запускать, пока вы не будете на 100% уверены в реализации:
+
+```kotlin
+class ToolSecurityTest {
+    @Test
+    fun `test delete file rejects paths outside project root`() {
+        assertThrows<BadInputException> {
+            ToolDeleteFile.invoke(ToolDeleteFile.Input("/"))
+        }
+    }
+}
+```
+
 ## Реализация чата с агентом-попугаем
 
 Чат с агентом — это просто:

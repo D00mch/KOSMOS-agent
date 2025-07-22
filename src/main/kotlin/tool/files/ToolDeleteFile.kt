@@ -3,7 +3,6 @@ package com.dumch.tool.files
 import com.dumch.tool.BadInputException
 import com.dumch.tool.InputParamDescription
 import com.dumch.tool.ToolSetup
-
 import java.io.File
 
 object ToolDeleteFile : ToolSetup<ToolDeleteFile.Input> {
@@ -14,6 +13,9 @@ object ToolDeleteFile : ToolSetup<ToolDeleteFile.Input> {
         val file = File(input.path)
         if (!file.exists() || file.isDirectory) {
             throw BadInputException("Invalid file path: ${input.path}")
+        }
+        if (!FilesToolUtil.isPathSafe(file)) {
+            throw BadInputException("Access denied: File path must be within project directory")
         }
         file.delete()
         return "File deleted at ${input.path}"

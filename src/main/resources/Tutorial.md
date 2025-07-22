@@ -547,6 +547,36 @@ class ToolSecurityTest {
 }
 ```
 
+Рисковать или нет — дело читателя. Автор статьи все еще пишет, а значит, тест пройдет. Вот моя реализация:
+
+```kotlin
+object ToolDeleteFile : ToolSetup<ToolDeleteFile.Input> {
+    // ...
+    override fun invoke(input: Input): String {
+        val file = File(input.path)
+        FilesToolUtil.requirePathIsSave(file)
+        file.delete()
+        return "File deleted at ${input.path}"
+    }
+}
+
+object FilesToolUtil {
+    private val projectRoot = File(".").canonicalFile
+
+    fun isPathSafe(file: File): Boolean {
+        val canonicalPath = file.canonicalFile
+        return canonicalPath.startsWith(projectRoot)
+    }
+
+    @Throws(BadInputException::class)
+    fun requirePathIsSave(file: File) {
+        if (!isPathSafe(file)) {
+            throw BadInputException("Access denied: File path must be within project directory")
+        }
+    }
+}
+```
+
 ## Реализация чата с агентом-попугаем
 
 Чат с агентом — это просто:

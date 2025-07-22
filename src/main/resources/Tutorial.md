@@ -1,4 +1,4 @@
-# Пишем агента на Kotlin
+# Пишем агента на Kotlin: KOSMOS
 
 Интернет завален реализациями на Питоне, но иногда удобнее поразбираться с технологиями на своём основном языке. Для меня это Kotlin.
 
@@ -9,6 +9,8 @@
 - Быстрая обратная связь, как с [REPL](https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop).
 
 Агента реализуем так, чтобы легко было заменить лежащую в основе LLM. Посмотрим, как отличается работа при использовании REST API в сравнении с SDK, пощупаем Гигачат и Anthropic.
+
+Ах да, 🪐 KOSMOS — акроним. Kotlin Open Synthetic Mind Orbiting System.
 
 ## Что такое агент
 
@@ -1094,20 +1096,20 @@ fun Exception.toGigaToolMessage(): GigaRequest.Message {
 Type `exit` to quit
 > Whats inside the settings.gradle.kts file?
 
-agent:
+🪐:
  If there were any subprojects or additional configurations, they would also appear here. However, based on the information you've shared, these two sections (`plugins` and `rootProject`) are the only parts present.
 
 > Can you update this file and add a comment of what it does?
 
-agent:
+🪐:
  😊🚀
 
 > Can you remove this project?
 
-agent:
+🪐:
  😉📌ei
 
-agent:
+🪐:
 Here's an overview of both options:
 1. **Remove Only File:** Deletes the `settings.gradle.kts` file while keeping other project components intact.
 2. **Remove Entire Project:** Removes everything related to the project, including source code, resources, etc., assuming you're okay with losing data permanently.
@@ -1423,9 +1425,11 @@ import com.dumch.anth.AnthropicAgent
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
+private const val AGENT_ALIAS = "🪐"
+
 suspend fun main() {
     val agent = AnthropicAgent.instance(userInputFlow())
-    agent.run().collect { text -> print("agent: $text") }
+    agent.run().collect { text -> print("$AGENT_ALIAS: $text") }
 }
 
 private fun userInputFlow(): Flow<String> = flow {
@@ -1475,9 +1479,9 @@ object ToolRunBashCommand : ToolSetup<ToolRunBashCommand.Input> {
 }
 ```
 
-Обратите внимания, Антрофик написал такую реализацию, которая позволит ему украсть наши ключи. Лучше ограничить список команд, которые он может выполнять. Для начала можно обойтись одной: `./gradlew`.
+Обратите внимания, Антропик написал такую реализацию, которая позволит ему украсть наши ключи. Лучше ограничить список команд, которые он может выполнять. Для начала можно обойтись одной: `./gradlew`.
 
-Тест ниже тоже написан антрофиком:
+Тест ниже тоже написан антропиком:
 ```kotlin
 class ToolRunBashCommandTest {
     @Test

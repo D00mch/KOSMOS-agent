@@ -670,8 +670,6 @@ object GigaAuth {
             }
         ) {
             header("Content-Type", "application/x-www-form-urlencoded")
-            header("Accept", "application/json")
-            header("RqUID", UUID.randomUUID().toString())
             header("Authorization", "Basic $apiKey")
         }.body<GigaResponse.Token>()
 
@@ -732,7 +730,7 @@ suspend fun main() {
 
 ```kotlin
 import com.fasterxml.jackson.annotation.JsonProperty
-import java.util.Date
+import java.util.*
 
 object GigaResponse {
 
@@ -741,11 +739,10 @@ object GigaResponse {
         @JsonProperty("expires_at") val expiresAt: Date
     )
 
-    data class Chat(
-        val choices: List<Choice>,
-        val created: Long,
-        val model: String,
-    )
+    sealed interface Chat {
+        data class Ok(val choices: List<Choice>, val created: Long, val model: String) : Chat
+        data class Error(val status: Int, val message: String) : Chat
+    }
 
     data class Choice(
         val message: Message,
@@ -760,7 +757,7 @@ object GigaResponse {
         @JsonProperty("function_call")
         val functionCall: FunctionCall? = null,
         @JsonProperty("functions_state_id")
-        val functionsStateId: String
+        val functionsStateId: String?
     )
 
     data class FunctionCall(
@@ -804,15 +801,22 @@ object GigaRequest {
 
 @Suppress("EnumEntryName")
 enum class GigaMessageRole { system, user, assistant, function }
-
 ```
 
 И API Гигачата:
 
 ```kotlin
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.auth.*
+import io.ktor.client.plugins.auth.providers.*
+import io.ktor.client.request.*
+import io.ktor.http.*
+
 class GigaChatAPI(private val auth: GigaAuth) {
     private val client = HttpClient(CIO) {
-        var token = "" // Можно хранить полученный токен в базе или в кеше
+        var token = "" // get form env, or cache, or db
         val gigaKey = System.getenv("GIGA_KEY")
         gigaDefaults()
         install(Auth) {
@@ -821,7 +825,6 @@ class GigaChatAPI(private val auth: GigaAuth) {
                     BearerTokens(token, "")
                 }
                 refreshTokens {
-                    // запрос токена на 401
                     token = auth.requestToken(gigaKey)
                     BearerTokens(token, "")
                 }
@@ -829,10 +832,15 @@ class GigaChatAPI(private val auth: GigaAuth) {
         }
     }
 
-    suspend fun message(body: GigaRequest.Chat): GigaResponse.Chat =
-        client.post("https://gigachat.devices.sberbank.ru/api/v1/chat/completions") {
+    suspend fun message(body: GigaRequest.Chat): GigaResponse.Chat {
+        val response = client.post("https://gigachat.devices.sberbank.ru/api/v1/chat/completions") {
             setBody(body)
-        }.body()
+        }
+        return when {
+            response.status.isSuccess() -> response.body<GigaResponse.Chat.Ok>()
+            else -> response.body<GigaResponse.Chat.Error>()
+        }
+    }
 
     fun clear() = client.close()
 }
@@ -877,10 +885,10 @@ suspend fun main() {
 
 После запуска должно напечататься что-то вроде:
 ```
-Message(content=, role=assistant, functionCall=FunctionCall(name=ListFiles, arguments={}), functionsStateId=055e95ce-cbdf-46e7-ba22-6d3ad791f8c6)
+Message(content=, role=assistant, functionCall=FunctionCall(name=ListFiles, arguments={'path':.}), functionsStateId=055e95ce-cbdf-46e7-ba22-6d3ad791f8c6)
 ```
 
-## Подключаем функции
+## Подключаем функций
 
 Помните, мы отложили на потом решение о том, как передавать метаданные о параметрах запроса?
 
@@ -892,8 +900,7 @@ object ToolListFiles : ToolSetup<ToolListFiles.Input> {
     override fun invoke(input: Input): String = TODO("...")
 
     data class Input(
-        // Тут нам бы добавить "Relative path to list files from"
-        // И потом доставать эту информацию
+        // Как бы нам передать в Гигачат "Relative path to list files from"?
         val path: String = "."
     )
 }
@@ -922,6 +929,8 @@ object ToolListFiles : ToolSetup<ToolListFiles.Input> {
 }
 ```
 
+Домашнее задание (и читателю, и автору) — реализовать проверку `Input` функций. Задача со звездочкой — сделать это в compile time. 
+
 Остальные функции можете описать самостоятельно или скопировать с проекта [ko-agent](https://github.com/D00mch/ko-agent/tree/main/src/main/kotlin/tool/files).
 
 Теперь нам нужен способ перевести имеющиеся функции в удобоваримый для Гигачата вариант, что-то вроде:
@@ -929,10 +938,8 @@ object ToolListFiles : ToolSetup<ToolListFiles.Input> {
 ```kotlin
 interface GigaToolSetup {
     val fn: GigaRequest.Function
-
     operator fun invoke(
-        functionCall: GigaResponse.FunctionCall,
-        functionsStateId: String,
+        functionCall: GigaResponse.FunctionCall
     ): GigaRequest.Message
 }
 ```
@@ -960,18 +967,16 @@ class GigaToolTest {
     fun `test function invocation`() {
         val toolsMap: Map<String, GigaToolSetup> = listOf(ToolListFiles.toGiga()).associateBy { it.fn.name }
 
-        val functionsStateId = "functionsStateId"
         val functionCall = GigaResponse.FunctionCall(
             name = "ListFiles",
             arguments = mapOf("path" to "src/test/resources"),
         )
 
-        val result = toolsMap[functionCall.name]!!.invoke(functionCall, functionsStateId)
+        val result = toolsMap[functionCall.name]!!.invoke(functionCall)
         assertEquals(
             GigaRequest.Message(
                 role = GigaMessageRole.function,
                 content = """{"result":"[directory/,directory/file.txt,test.txt]"}""",
-                functionsStateId = functionsStateId,
             ),
             result
         )
@@ -979,7 +984,7 @@ class GigaToolTest {
 }
 ```
 
-Помните, Input функций (тулов) мы описывали аннотациями. Прочесть аннотации можно через медленную рефлексию, но если сделать это только один раз на старте приложения, то несколько миллисекунд ни на что не повлияют.
+Прочесть аннотации можно через рефлексию, но если сделать это только один раз на старте приложения, то несколько миллисекунд ни на что не повлияют.
 
 Добавим зависимость:
 ```kotlin
@@ -1014,20 +1019,29 @@ inline fun <reified Input> ToolSetup<Input>.toGiga(): GigaToolSetup {
 
         override fun invoke(
             functionCall: GigaResponse.FunctionCall,
-            functionsStateId: String,
         ): GigaRequest.Message {
-            val input: Input = gigaJsonMapper.convertValue(functionCall.arguments, Input::class.java)
-            val toolResult = toolSetup.invoke(input)
-            val gigaResult = gigaJsonMapper.writeValueAsString(
-                mapOf("result" to toolResult)
-            )
-            return GigaRequest.Message(
-                role = GigaMessageRole.function,
-                content = gigaResult,
-                functionsStateId = functionsStateId,
-            )
+            return try {
+                val input: Input = gigaJsonMapper.convertValue(functionCall.arguments, Input::class.java)
+                val toolResult = toolSetup.invoke(input)
+                val gigaResult = gigaJsonMapper.writeValueAsString(
+                    mapOf("result" to toolResult)
+                )
+                GigaRequest.Message(
+                    role = GigaMessageRole.function,
+                    content = gigaResult,
+                )
+            } catch (e: Exception) {
+                e.toGigaToolMessage()
+            }
         }
     }
+}
+
+fun Exception.toGigaToolMessage(): GigaRequest.Message {
+    return GigaRequest.Message(
+        role = GigaMessageRole.function,
+        content = """{"result": "${message ?: toString()}"}""",
+    )
 }
 ```
 
@@ -1062,14 +1076,14 @@ inline fun <reified Input> ToolSetup<Input>.toGiga(): GigaToolSetup {
 └──┴──────────────┴──────────────────────────────────────┴───┘
 ```
 
-1. Пользователь вводит сообщение
-2. Агент добавляет его в список сообщений
-3. Агент отправляет все сообщения + список функций в LLM
+1. Пользователь вводит сообщение.
+2. Агент добавляет его в список сообщений.
+3. Агент отправляет все сообщения + список функций в LLM.
 4. LLM возвращает:
     - 4.1. Обычный текст → печатаем текст.
-    - 4.2. Вызов функций → выполняем функции и добавляем результат в список сообщений
+    - 4.2. Вызов функций → выполняем функции и добавляем результат в список сообщений.
 5. Если был вызов функций, идем в шаг 3.
-6. Возвращаемся к шагу 1
+6. Возвращаемся к шагу 1.
 
 Тизер — вот чего мне удалось добиться с простой реализацией, которую мы сейчас напишем:
 
@@ -1204,7 +1218,7 @@ class GigaAgent(
 
 Попробуем написать агента с SDK, пользуясь имеющимися функциями (тулами). Будет видно, что независимо от LLM и способа интеграции (REST API или SDK) в общем-то ничего не меняется.
 
-Не могу не сказать, что весомая причина включения второй LLM — дать возможность читателям ощутить результативность агента. С Гигачат лично у меня ничего не получилось.
+Весомая причина включения второй LLM — дать возможность читателям ощутить результативность агента. С Гигачат лично у меня ничего не получилось.
 
 ## Подготовка
 

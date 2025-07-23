@@ -16,12 +16,12 @@ object ToolListFiles : ToolSetup<ToolListFiles.Input> {
             throw BadInputException("Invalid directory path: $dirPath")
         }
         FilesToolUtil.requirePathIsSave(base)
-        val files = base.walkTopDown() // sequence
-            .filter { it != base }
-            .map {
-                val relPath = it.relativeTo(base).path
-                if (it.isDirectory) "$relPath/" else relPath
-            }
+    val files = base.walkTopDown() // sequence
+        .filter { it != base }
+        .map { file ->
+            val relPath = file.relativeTo(base).path
+            if (file.isDirectory) "$relPath/" else relPath
+        }
 
         return files.joinToString(",", prefix = "[", postfix = "]")
     }

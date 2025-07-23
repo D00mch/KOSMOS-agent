@@ -1,4 +1,4 @@
-# Kotlin Open Synthetic Mind Orbiting System agent 🪐
+# 🪐 Kotlin Open Synthetic Mind Orbiting System agent
 
 A Kotlin-based framework for creating and managing tools that can be used with various AI models including Anthropic's Claude and GigaChat. This project provides a structured way to implement tool-based interactions with AI models, allowing for file operations and other system interactions.
 

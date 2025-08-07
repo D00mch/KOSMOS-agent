@@ -39,7 +39,7 @@ class GigaAgent(
                 for (ch in response.choices) {
                     val msg = ch.message
                     when {
-                        msg.content.isNotBlank() && msg.functionsStateId == null -> send(msg.content)
+                        msg.content.isNotBlank() -> send(msg.content)
 
                         msg.functionCall != null && msg.functionsStateId != null -> {
                             val deferred = async(Dispatchers.IO) { executeTool(msg.functionCall) }

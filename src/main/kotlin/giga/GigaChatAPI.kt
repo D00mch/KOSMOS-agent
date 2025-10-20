@@ -43,5 +43,16 @@ class GigaChatAPI(private val auth: GigaAuth) {
         }
     }
 
+    suspend fun embeddings(body: GigaRequest.Embeddings): GigaResponse.Embeddings {
+        val response = client.post("https://gigachat.devices.sberbank.ru/api/v1/embeddings") {
+            setBody(body)
+        }
+        return when {
+            response.status.isSuccess() -> response.body<GigaResponse.Embeddings>()
+            response.status == HttpStatusCode.Unauthorized || response.status == HttpStatusCode.Forbidden -> TODO("Auth exception")
+            else -> TODO("unexpected error")
+        }
+    }
+
     fun clear() = client.close()
 }

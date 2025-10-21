@@ -1,6 +1,7 @@
 package com.dumch
 
 import com.dumch.agent.GraphBasedAgent
+import com.dumch.db.VectorDB
 import com.dumch.giga.GigaAuth
 import com.dumch.giga.GigaChatAPI
 import com.dumch.giga.GigaModel
@@ -13,6 +14,7 @@ suspend fun main() {
     val agent = GraphBasedAgent(
         model = GigaModel.Max.alias,
         llmApi = GigaChatAPI(GigaAuth),
+        vectorDb = VectorDB,
     )
     userInputFlow().collect { text ->
         val result = agent.execute(text)

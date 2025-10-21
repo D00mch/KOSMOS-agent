@@ -35,6 +35,18 @@ object GigaResponse {
         val name: String,
         val arguments: Map<String, Any>
     )
+
+    data class Embeddings(
+        val data: List<Embedding>,
+        val model: String,
+        @JsonProperty("object") val objectType: String,
+    )
+
+    data class Embedding(
+        val embedding: List<Double>,
+        val index: Int,
+        @JsonProperty("object") val objectType: String? = null,
+    )
 }
 
 object GigaRequest {
@@ -67,6 +79,11 @@ object GigaRequest {
     data class Property(
         val type: String,
         val description: String? = null
+    )
+
+    data class Embeddings(
+        val model: String = "Embeddings",
+        val input: List<String>,
     )
 }
 

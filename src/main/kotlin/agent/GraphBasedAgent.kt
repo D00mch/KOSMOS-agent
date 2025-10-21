@@ -3,6 +3,7 @@ package com.dumch.agent
 import com.dumch.agent.engine.*
 import com.dumch.agent.node.NodesCommon
 import com.dumch.agent.node.NodesLLM
+import com.dumch.db.VectorDB
 import com.dumch.giga.*
 import io.ktor.util.logging.*
 import kotlinx.coroutines.Deferred
@@ -18,7 +19,8 @@ import kotlin.math.ceil
 class GraphBasedAgent(
     private val model: String,
     private val llmApi: GigaChatAPI,
-    private val tools: Map<String, GigaToolSetup> = GigaAgent.tools
+    private val tools: Map<String, GigaToolSetup> = GigaAgent.tools,
+    private val vectorDb: VectorDB,
 ) {
     private val l = LoggerFactory.getLogger(GraphBasedAgent::class.java)
     private val nodesLLM = NodesLLM(llmApi)
@@ -103,13 +105,17 @@ class GraphBasedAgent(
 
     private suspend fun appendActualInformation(userText: String): GigaRequest.Message? {
         if (userText.isBlank()) return null
-        if (true) return null
-        // 1. Запрос к LLM, чтобы получить веткор из input
-        // 2. Поиск по векторной базе данных похожих вхождение
-        // 3. Прикрепление дополнительного сообщения с вхождениями
+
+        val embedding = llmApi.embeddings(GigaRequest.Embeddings(input = listOf(userText)))
+        val result = vectorDb.searchSimilar(embedding.data.first().embedding, limit = 2)
+            .joinToString(
+                prefix = "Найденные в локальном хранилище данные:\n",
+                separator = "\n",
+            )
+
         return GigaRequest.Message(
             role = GigaMessageRole.user,
-            content = "Тут могли бы быть данные из векторной базы данных"
+            content = result,
         )
     }
 

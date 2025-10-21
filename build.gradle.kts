@@ -26,6 +26,8 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:${Versions.Logback}")
     implementation("org.slf4j:jul-to-slf4j:2.0.17")
 
+    implementation("org.apache.lucene:lucene-core:9.9.2")
+
     testImplementation(kotlin("test"))
 }
 

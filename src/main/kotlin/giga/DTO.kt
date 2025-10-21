@@ -72,3 +72,16 @@ object GigaRequest {
 
 @Suppress("EnumEntryName")
 enum class GigaMessageRole { system, user, assistant, function }
+
+const val MAX_TOKENS = 8192
+
+enum class GigaModel(val alias: String, val maxTokens: Int) {
+    Lite("GigaChat-2", MAX_TOKENS),
+    Pro("GigaChat-Pro", MAX_TOKENS),
+    Max("GigaChat-Max", MAX_TOKENS),
+}
+
+fun String.toSystemPromptMessage() = GigaRequest.Message(
+    role = GigaMessageRole.system,
+    content = this
+)

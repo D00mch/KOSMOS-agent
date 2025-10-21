@@ -108,7 +108,7 @@ class GigaAgent(
     }
 
     companion object {
-        private val tools: Map<String, GigaToolSetup> = listOf(
+        val tools: Map<String, GigaToolSetup> = listOf(
             ToolReadFile.toGiga(),
             ToolListFiles.toGiga(),
             ToolNewFile.toGiga(),

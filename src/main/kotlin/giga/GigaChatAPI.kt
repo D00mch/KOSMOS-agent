@@ -5,6 +5,8 @@ import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.auth.*
 import io.ktor.client.plugins.auth.providers.*
+import io.ktor.client.plugins.logging.LogLevel
+import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.*
 import io.ktor.http.*
 
@@ -23,6 +25,11 @@ class GigaChatAPI(private val auth: GigaAuth) {
                     BearerTokens(token, "")
                 }
             }
+        }
+        install(Logging) {
+            val envLevel = LogLevel.INFO
+            level = envLevel
+            sanitizeHeader { it.equals(HttpHeaders.Authorization, true) }
         }
     }
 

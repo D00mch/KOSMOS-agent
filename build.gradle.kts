@@ -22,6 +22,9 @@ dependencies {
     implementation("io.ktor:ktor-client-auth:${Versions.Ktor}")
     implementation("io.ktor:ktor-serialization-kotlinx-json:${Versions.Ktor}")
     implementation("io.ktor:ktor-serialization-jackson:${Versions.Ktor}")
+    implementation("io.ktor:ktor-client-logging:${Versions.Ktor}")
+    implementation("ch.qos.logback:logback-classic:${Versions.Logback}")
+    implementation("org.slf4j:jul-to-slf4j:2.0.17")
 
     testImplementation(kotlin("test"))
 }
